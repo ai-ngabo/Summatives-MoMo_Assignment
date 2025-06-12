@@ -110,23 +110,24 @@ function cleanSMS(smsList) {
 
     return cleaned;
 }
+const cleaned = cleanSMS(smsData);
+console.log(Array.isArray(cleaned)); // should print true if it's an array
+// // Debug block
+// if (require.main === module) {
+//     const smsData = parseSMSFromFile(path.join(__dirname, "../../sms_data/sms.xml"));
+//     const cleaned = cleanSMS(smsData);
 
-// Debug block
-if (require.main === module) {
-    const smsData = parseSMSFromFile(path.join(__dirname, "../../sms_data/sms.xml"));
-    const cleaned = cleanSMS(smsData);
-
-    console.log("\n--- Cleaned & Categorized Messages ---\n");
-    for (const msg of cleaned.slice(0, 5)) {
-        console.log(`Type: ${msg.transaction_type}`);
-        console.log(`Amount: ${msg.amount} RWF`);
-        console.log(`Fee: ${msg.fee} RWF`);
-        console.log(`New Balance: ${msg.new_balance}`);
-        console.log(`Sender: ${msg.sender}`);
-        console.log(`Recipient Name: ${msg.recipient_name}`);
-        console.log(`Recipient Phone: ${msg.recipient_phone}`);
-        console.log(`Date: ${msg.date}`);
-        console.log(`Message: ${msg.body.slice(0, 60)}...`);
-        console.log("-".repeat(40));
-    }
-}
+//     console.log("\n--- Cleaned & Categorized Messages ---\n");
+//     for (const msg of cleaned.slice(0, 5)) {
+//         console.log(`Type: ${msg.transaction_type}`);
+//         console.log(`Amount: ${msg.amount} RWF`);
+//         console.log(`Fee: ${msg.fee} RWF`);
+//         console.log(`New Balance: ${msg.new_balance}`);
+//         console.log(`Sender: ${msg.sender}`);
+//         console.log(`Recipient Name: ${msg.recipient_name}`);
+//         console.log(`Recipient Phone: ${msg.recipient_phone}`);
+//         console.log(`Date: ${msg.date}`);
+//         console.log(`Message: ${msg.body.slice(0, 60)}...`);
+//         console.log("-".repeat(40));
+//     }
+// }
