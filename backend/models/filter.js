@@ -34,10 +34,10 @@ function extractDate(body) {
     return match ? match[1] : "Unknown Date";
 }
 
-// Extract recipient details (name & phone number)
 function extractRecipientDetails(body) {
     const match = body.match(/transferred to ([\w\s]+) \((\d+)\)|to ([\w\s]+) (\d+)|payment of \d+ RWF to ([\w\s]+) \((\d+)\)/i);
-    return match ? { recipient_name: match[1].trim(), recipient_phone: match[2] } : { recipient_name: "Unknown", recipient_phone: null };
+    return match ? { recipient_name: match[1] || match[3] || match[5], recipient_phone: match[2] || match[4] || match[6] } 
+                 : { recipient_name: "Unknown", recipient_phone: null };
 }
 
 // Extract sender details
