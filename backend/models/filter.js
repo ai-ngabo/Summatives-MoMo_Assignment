@@ -9,74 +9,46 @@ function logWarning(message) {
     logFile.write(`[WARNING] ${new Date().toISOString()} - ${message}\n`);
 }
 
-// Extract transaction amount
+function logError(message) {
+    logFile.write(`[ERROR] ${new Date().toISOString()} - ${message}\n`);
+}
+
+// Extract amount from SMS body
 function extractAmount(body) {
-    const match = body.match(/(?:received|transferred|payment|withdrawn)\s(\d+)\sRWF/);
+    const match = body.match(/(\d+)\sRWF/);
     return match ? parseInt(match[1]) : null;
 }
 
-// Extract transaction fee
-function extractFee(body) {
-    const match = body.match(/Fee was:\s(\d+)\sRWF/);
-    return match ? parseInt(match[1]) : null;
+// Extract sender from body
+function extractSender(body) {
+    const match = body.match(/from ([\w\s]+) \(\d+\)/i);
+    return match ? match[1].trim() : "Unknown Sender"; // Should always exist
 }
 
-// Extract new balance
-function extractNewBalance(body) {
-    const match = body.match(/New balance:\s(\d+)\sRWF/);
-    return match ? parseInt(match[1]) : null;
-}
-
-// Extract transaction date
-function extractDate(body) {
-    const match = body.match(/at\s(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})/);
-    return match ? match[1] : "Unknown Date";
-}
-
-// Extract transaction ID
-function extractTransactionId(body) {
-    const match = body.match(/Financial Transaction Id:\s(\d+)/);
-    return match ? match[1] : null;
-}
-
-// Extract sender details for Incoming Money transactions
-function extractSenderDetails(body) {
-    const match = body.match(/from ([\w\s]+) \((\*+\d+)\)/);
-    return match ? { sender_name: match[1].trim(), sender_phone: match[2] } : { sender_name: "Unknown Sender", sender_phone: null };
-}
-
-// Extract recipient details for Transfers
+// Extract recipient & recipient code
 function extractRecipientDetails(body) {
-    const match = body.match(/transferred to ([\w\s]+) \((\d+)\)/);
-    return match ? { recipient_name: match[1].trim(), recipient_phone: match[2] } : { recipient_name: "Unknown Recipient", recipient_phone: null };
-}
-// Extract recipient details for Payments
-function extractRecipientDetails(body) {
-    const match = body.match(/to ([\w\s]+) \((\d+)\)/i);
-    return match ? { recipient_name: match[1].trim(), recipient_phone: match[2] } : { recipient_name: "Unknown", recipient_phone: null };
+    const match = body.match(/to ([\w\s]+) (\d+)\s/i);
+    if (match) {
+        return { recipient_name: match[1].trim(), recipient_code: match[2].trim() };
+    }
+
+    const fallbackMatch = body.match(/to ([\w\s]+)/i);
+    return fallbackMatch ? { recipient_name: fallbackMatch[1].trim(), recipient_code: null } : { recipient_name: "Unknown Recipient", recipient_code: null };
 }
 
-// Extract sender details for Withdrawals
-function extractWithdrawalDetails(body) {
-    const match = body.match(/You ([\w\s]+) \((\*+\d+)\) have withdrawn (\d+)\sRWF via agent/);
-    return match ? { sender_name: match[1], sender_phone: match[2], amount: parseInt(match[3]) } 
-                 : { sender_name: "Unknown", sender_phone: null, amount: null };
-}
-
-// Categorize transaction type
+// Categorize based on keywords
 function categorizeTransaction(body) {
     const lower = body.toLowerCase();
 
-    if (lower.includes("you have received")) return "Incoming Money";
-    if (lower.includes("you have transferred")) return "Transfer to Mobile";
-    if (lower.includes("payment to code")) return "Payment to Code Holder";
-    if (lower.includes("bank deposit")) return "Bank Deposit";
-    if (lower.includes("withdrawn") && lower.includes("via agent")) return "Withdrawal from Agent";
-    if (lower.includes("bank transfer")) return "Bank Transfer";
+    if (lower.includes("wasac") || lower.includes("water bill")) return "Water Utility Bill Payment";
+    if (lower.includes("power bill") || lower.includes("electricity")) return "Cash Power Bill Payment";
     if (lower.includes("airtime")) return "Airtime Bill Payment";
-    if (lower.includes("power bill")) return "Cash Power Bill Payment";
-    if (lower.includes("wasac")) return "Water Utility Bill Payment";
     if (lower.includes("bundle")) return "Internet/Voice Bundle Purchase";
+    if (lower.includes("deposit")) return "Bank Deposit";
+    if (lower.includes("withdrawn") || lower.includes("agent")) return "Withdrawal from Agent";
+    if (lower.includes("transferred")) return "Bank Transfer";
+    if (lower.includes("payment")) return "Payment";
+    if (lower.includes("received")) return "Incoming Money";
 
     logWarning(`Unrecognized transaction: ${body}`);
     return "Unknown";
@@ -87,43 +59,23 @@ function cleanSMS(smsList) {
     const cleaned = [];
 
     for (const sms of smsList) {
-        let amount = extractAmount(sms.body);
-        const fee = extractFee(sms.body);
-        const new_balance = extractNewBalance(sms.body);
-        const date = extractDate(sms.body);
-        const transaction_id = extractTransactionId(sms.body);
+        const amount = extractAmount(sms.body);
+        const sender = extractSender(sms.body);
+        const { recipient_name, recipient_code } = extractRecipientDetails(sms.body);
         const transactionType = categorizeTransaction(sms.body);
 
-        let sender = {}, recipient = {};
-        
-        if (transactionType === "Incoming Money") {
-            sender = extractSenderDetails(sms.body);
-            recipient = { recipient_name: "User Mobile Account", recipient_phone: null }; // User's own account
-        } else if (transactionType === "Transfer to Mobile") {
-            recipient = extractRecipientDetails(sms.body);
-            sender = { sender_name: "User", sender_phone: null }; // User initiated transfer
-        } else if (transactionType === "Withdrawal from Agent") {
-            sender = extractWithdrawalDetails(sms.body);
-            recipient = { recipient_name: "Mobile Money Agent", recipient_phone: null };
-            amount = sender.amount; // Ensure correct amount extraction
-        }
-
-        if (!amount) {
+        if (amount === null) {
             logWarning(`Skipping SMS due to missing amount: ${sms.body}`);
             continue;
         }
 
         cleaned.push({
             body: sms.body,
-            date,
+            date: sms.date,
             amount,
-            sender_name: sender.sender_name,
-            sender_phone: sender.sender_phone,
-            recipient_name: recipient.recipient_name,
-            recipient_phone: recipient.recipient_phone,
-            fee,
-            new_balance,
-            transaction_id,
+            sender,
+            recipient_name,
+            recipient_code,
             transaction_type: transactionType
         });
     }
@@ -137,21 +89,14 @@ if (require.main === module) {
     const cleaned = cleanSMS(smsData);
 
     console.log("\n--- Cleaned & Categorized Messages ---\n");
-
-    const categorized = cleaned.reduce((acc, msg) => {
-        acc[msg.transaction_type] = acc[msg.transaction_type] || [];
-        acc[msg.transaction_type].push(msg);
-        return acc;
-    }, {});
-
-    for (const [type, transactions] of Object.entries(categorized)) {
-        console.log(`\n=== ${type} Transactions (${transactions.length}) ===`);
-        transactions.slice(0, 5).forEach((msg) => { // Show more per type
-            console.log(`Amount: ${msg.amount} RWF | Sender: ${msg.sender_name} | Recipient: ${msg.recipient_name}`);
-            console.log(`Date: ${msg.date} | New Balance: ${msg.new_balance || "N/A"} RWF`);
-            console.log(`Transaction ID: ${msg.transaction_id || "N/A"}`);
-            console.log(`Message Preview: ${msg.body.slice(0, 60)}...`);
-            console.log("-".repeat(40));
-        });
+    for (const msg of cleaned.slice(0, 5)) {
+        console.log(`Type: ${msg.transaction_type}`);
+        console.log(`Amount: ${msg.amount} RWF`);
+        console.log(`Sender: ${msg.sender}`);
+        console.log(`Recipient Name: ${msg.recipient_name}`);
+        console.log(`Recipient Code: ${msg.recipient_code || "N/A"}`);
+        console.log(`Date: ${msg.date}`);
+        console.log(`Message: ${msg.body.slice(0, 60)}...`);
+        console.log("-".repeat(40));
     }
 }
