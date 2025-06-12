@@ -3,10 +3,16 @@ const path = require("path");
 const { parseSMSFromFile } = require("./sms_parser.js");
 
 // Setup logging
-const logFile = fs.createWriteStream("unprocessed_messages.log", { flags: "a" });
+const logFile = fs.createWriteStream("../logs/unprocessed_data.log", { flags: "a" });
 
 function logWarning(message) {
     logFile.write(`[WARNING] ${new Date().toISOString()} - ${message}\n`);
+}
+
+// Extract date
+function extractDate(body) {
+    const match = body.match(/at\s(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})/);
+    return match ? match[1] : null;
 }
 
 // Extract amount
