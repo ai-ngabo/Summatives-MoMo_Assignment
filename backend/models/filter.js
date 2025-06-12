@@ -112,11 +112,14 @@ function cleanSMS(smsList) {
 }
 console.log(Array.isArray(cleaned)); // should log: true
 console.log(`Number of cleaned SMS: ${cleaned.length}`);
-// // Debug block
-// if (require.main === module) {
-//     const smsData = parseSMSFromFile(path.join(__dirname, "../../sms_data/sms.xml"));
-//     const cleaned = cleanSMS(smsData);
+// Debug block
+if (require.main === module) {
+    const smsData = parseSMSFromFile(path.join(__dirname, "../../sms_data/sms.xml"));
+    const cleaned = cleanSMS(smsData);
 
+    console.log(Array.isArray(cleaned)); // should log: true
+    console.log(`Number of cleaned SMS: ${cleaned.length}`);
+}
 //     console.log("\n--- Cleaned & Categorized Messages ---\n");
 //     for (const msg of cleaned.slice(0, 5)) {
 //         console.log(`Type: ${msg.transaction_type}`);
