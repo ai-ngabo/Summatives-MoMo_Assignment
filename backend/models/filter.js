@@ -34,11 +34,26 @@ function extractDate(body) {
     return match ? match[1] : "Unknown Date";
 }
 
+ //Extract recipient details from the SMS message body.
 function extractRecipientDetails(body) {
     const match = body.match(/transferred to ([\w\s]+) \((\d+)\)|to ([\w\s]+) (\d+)|payment of \d+ RWF to ([\w\s]+) \((\d+)\)/i);
-    return match ? { recipient_name: match[1] || match[3] || match[5], recipient_phone: match[2] || match[4] || match[6] } 
-                 : { recipient_name: "Unknown", recipient_phone: null };
+    
+    if (!match) {
+        // If no match is found, return an object with default values
+        return { recipient_name: "Unknown", recipient_phone: null };
+    }
+
+    const recipient_name = match[1] || match[3] || match[5];
+    const recipient_phone = match[2] || match[4] || match[6];
+
+    // Return an object with the extracted values
+    return { 
+        recipient_name: recipient_name ? recipient_name.trim() : "Unknown", 
+        recipient_phone 
+    };
+    return { recipient_name: recipient_name ? recipient_name.trim() : "Unknown", recipient_phone };
 }
+/*******  9f58c072-ca58-40ee-af2a-f88e7e9286a1  *******/
 
 // Extract sender details
 function extractSender(body) {
