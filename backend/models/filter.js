@@ -50,6 +50,11 @@ function extractRecipientDetails(body) {
     const match = body.match(/transferred to ([\w\s]+) \((\d+)\)/);
     return match ? { recipient_name: match[1].trim(), recipient_phone: match[2] } : { recipient_name: "Unknown Recipient", recipient_phone: null };
 }
+// Extract recipient details for Payments
+function extractRecipientDetails(body) {
+    const match = body.match(/to ([\w\s]+) \((\d+)\)/i);
+    return match ? { recipient_name: match[1].trim(), recipient_phone: match[2] } : { recipient_name: "Unknown", recipient_phone: null };
+}
 
 // Extract sender details for Withdrawals
 function extractWithdrawalDetails(body) {
@@ -62,8 +67,8 @@ function extractWithdrawalDetails(body) {
 function categorizeTransaction(body) {
     const lower = body.toLowerCase();
 
-    if (lower.includes("received")) return "Incoming Money";
-    if (lower.includes("transferred to")) return "Transfer to Mobile";
+    if (lower.includes("you have received")) return "Incoming Money";
+    if (lower.includes("you have transferred")) return "Transfer to Mobile";
     if (lower.includes("payment to code")) return "Payment to Code Holder";
     if (lower.includes("bank deposit")) return "Bank Deposit";
     if (lower.includes("withdrawn") && lower.includes("via agent")) return "Withdrawal from Agent";
