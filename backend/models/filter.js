@@ -102,18 +102,22 @@ if (require.main === module) {
     const smsData = parseSMSFromFile(path.join(__dirname, "../../sms_data/sms.xml"));
     const cleaned = cleanSMS(smsData);
 
-    console.log("\n--- Cleaned & Categorized Messages ---\n");
-    for (const msg of cleaned.slice(0, 5)) {
-        console.log(`Type: ${msg.transaction_type}`);
-        console.log(`Amount: ${msg.amount} RWF`);
-        console.log(`New Balance: ${msg.new_balance || "N/A"} RWF`);
-        console.log(`Transaction ID: ${msg.transaction_id || "N/A"}`);
-        console.log(`Sender Name: ${msg.sender_name}`);
-        console.log(`Sender Phone: ${msg.sender_phone || "N/A"}`);
-        console.log(`Recipient Name: ${msg.recipient_name}`);
-        console.log(`Recipient Phone: ${msg.recipient_phone || "N/A"}`);
-        console.log(`Date: ${msg.date}`);
-        console.log(`Message: ${msg.body.slice(0, 60)}...`);
-        console.log("-".repeat(40));
+    console.log("\n--- Transaction Summary ---\n");
+
+    const categorized = cleaned.reduce((acc, msg) => {
+        acc[msg.transaction_type] = acc[msg.transaction_type] || [];
+        acc[msg.transaction_type].push(msg);
+        return acc;
+    }, {});
+
+    for (const [type, transactions] of Object.entries(categorized)) {
+        console.log(`\n=== ${type} Transactions (${transactions.length}) ===`);
+        transactions.slice(0, 3).forEach((msg) => { // Show up to 3 transactions per type
+            console.log(`Amount: ${msg.amount} RWF | Sender: ${msg.sender_name} | Recipient: ${msg.recipient_name}`);
+            console.log(`Date: ${msg.date} | New Balance: ${msg.new_balance || "N/A"} RWF`);
+            console.log(`Transaction ID: ${msg.transaction_id || "N/A"}`);
+            console.log(`Message Preview: ${msg.body.slice(0, 60)}...`);
+            console.log("-".repeat(40));
+        });
     }
 }
