@@ -9,15 +9,21 @@ function logWarning(message) {
     logFile.write(`[WARNING] ${new Date().toISOString()} - ${message}\n`);
 }
 
-// Extract transaction amount (Received)
+// Extract transaction amount
 function extractAmount(body) {
-    const match = body.match(/received (\d+)\sRWF/);
+    const match = body.match(/(?:received|transferred|payment|withdrawn)\s(\d+)\sRWF/);
+    return match ? parseInt(match[1]) : null;
+}
+
+// Extract transaction fee
+function extractFee(body) {
+    const match = body.match(/Fee was:\s(\d+)\sRWF/);
     return match ? parseInt(match[1]) : null;
 }
 
 // Extract new balance
 function extractNewBalance(body) {
-    const match = body.match(/Your new balance:(\d+)\sRWF/);
+    const match = body.match(/New balance:\s(\d+)\sRWF/);
     return match ? parseInt(match[1]) : null;
 }
 
@@ -27,19 +33,25 @@ function extractDate(body) {
     return match ? match[1] : "Unknown Date";
 }
 
-// Extract sender name & phone (Incoming Money)
-function extractSenderDetails(body) {
-    const match = body.match(/from ([\w\s]+) \((\*+\d+)\)/);
-    return match ? { sender_name: match[1].trim(), sender_phone: match[2] } : { sender_name: "Unknown Sender", sender_phone: null };
-}
-
 // Extract transaction ID
 function extractTransactionId(body) {
     const match = body.match(/Financial Transaction Id:\s(\d+)/);
     return match ? match[1] : null;
 }
 
-// Categorize transaction
+// Extract sender details (Incoming Money transactions)
+function extractSenderDetails(body) {
+    const match = body.match(/from ([\w\s]+) \((\*+\d+)\)/);
+    return match ? { sender_name: match[1].trim(), sender_phone: match[2] } : { sender_name: "Unknown Sender", sender_phone: null };
+}
+
+// Extract recipient details (Transfers)
+function extractRecipientDetails(body) {
+    const match = body.match(/transferred to ([\w\s]+) \((\d+)\)/);
+    return match ? { recipient_name: match[1].trim(), recipient_phone: match[2] } : { recipient_name: "Unknown Recipient", recipient_phone: null };
+}
+
+// Categorize transaction type
 function categorizeTransaction(body) {
     const lower = body.toLowerCase();
 
@@ -64,6 +76,7 @@ function cleanSMS(smsList) {
 
     for (const sms of smsList) {
         const amount = extractAmount(sms.body);
+        const fee = extractFee(sms.body);
         const new_balance = extractNewBalance(sms.body);
         const date = extractDate(sms.body);
         const transaction_id = extractTransactionId(sms.body);
@@ -72,7 +85,10 @@ function cleanSMS(smsList) {
         let sender = {}, recipient = {};
         if (transactionType === "Incoming Money") {
             sender = extractSenderDetails(sms.body);
-            recipient = { recipient_name: "User Mobile Account", recipient_phone: null }; // User's account
+            recipient = { recipient_name: "User Mobile Account", recipient_phone: null }; // User's own account
+        } else if (transactionType === "Transfer to Mobile") {
+            recipient = extractRecipientDetails(sms.body);
+            sender = { sender_name: "User", sender_phone: null }; // User initiated transfer
         }
 
         if (!amount) {
@@ -88,6 +104,7 @@ function cleanSMS(smsList) {
             sender_phone: sender.sender_phone,
             recipient_name: recipient.recipient_name,
             recipient_phone: recipient.recipient_phone,
+            fee,
             new_balance,
             transaction_id,
             transaction_type: transactionType
@@ -102,8 +119,7 @@ if (require.main === module) {
     const smsData = parseSMSFromFile(path.join(__dirname, "../../sms_data/sms.xml"));
     const cleaned = cleanSMS(smsData);
 
-    console.log("\n--- Transaction Summary ---\n");
-
+    console.log("\n--- Cleaned & Categorized Messages ---\n");
     const categorized = cleaned.reduce((acc, msg) => {
         acc[msg.transaction_type] = acc[msg.transaction_type] || [];
         acc[msg.transaction_type].push(msg);
