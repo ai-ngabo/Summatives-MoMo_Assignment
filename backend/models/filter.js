@@ -24,7 +24,7 @@ function extractDate(body) {
 
 // Extract amount
 function extractAmount(body) {
-    const match = body.match(/(?:payment of|transferred|withdrawn|received)?\s*([\d,]+)\sRWF/i);
+    const match = body.match(/(?:payment of|transferred|withdrawn|received|transaction of)\s([\d,]+)\sRWF/i);
     return match ? parseInt(match[1].replace(/,/g, ""), 10) : null;
 }
 
@@ -71,6 +71,7 @@ function categorizeTransaction(body) {
     if (lower.includes("power bill")) return "Cash Power Bill Payment";
     if (lower.includes("wasac")) return "Water Utility Bill Payment";
     if (lower.includes("bundle")) return "Internet/Voice Bundle Purchase";
+    if (lower.includes("a transaction of") && lower.includes("by")) return "Transactions Initiated by Third Parties";
 
     logWarning(`Unrecognized transaction: ${body}`);
     return "Unknown";
