@@ -24,8 +24,8 @@ function extractDate(body) {
 
 // Extract amount
 function extractAmount(body) {
-    const match = body.match(/(\d+)\sRWF/);
-    return match ? parseInt(match[1], 10) : null;
+    const match = body.match(/(?:payment of|transferred|withdrawn|received)\s([\d,]+)\sRWF/i);
+    return match ? parseInt(match[1].replace(/,/g, ""), 10) : null;
 }
 
 // Extract fee
