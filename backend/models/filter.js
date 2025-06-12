@@ -9,6 +9,13 @@ function logWarning(message) {
     logFile.write(`[WARNING] ${new Date().toISOString()} - ${message}\n`);
 }
 
+// extract sender
+function extractSender(body) {
+    // Try format: "from Jane Smith (*********123)"
+    const match = body.match(/from ([\w\s]+) \(\*+\d+\)/i);
+    return match ? match[1].trim().toLowerCase() : "unknown sender";
+}
+
 // Extract date
 function extractDate(body) {
     const match = body.match(/at\s(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})/);
