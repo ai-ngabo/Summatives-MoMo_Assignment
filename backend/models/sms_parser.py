@@ -21,6 +21,7 @@ def parse_sms(_file__path):
     except Exception as e:
         print(f"Error parsing XML file: {e}")
         return []
-    
-    sms_s = parse_sms("sms_data/sms.xml")
-    print(sms_list[:3])
+
+#Debugging test  
+# sms_s = parse_sms("../../sms_data/sms.xml")
+# print(sms_s[:3])
