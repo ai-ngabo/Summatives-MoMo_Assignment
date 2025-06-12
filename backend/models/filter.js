@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { parseSMSFromFile } = require("../../sms_data/sms_parser"); // adjust path as needed
+const { parseSMSFromFile } = require("../../sms_data/sms_parser.js"); // adjust path as needed
 
 // Setup logging to a file
 const logFile = fs.createWriteStream("unprocessed_messages.log", { flags: "a" });
