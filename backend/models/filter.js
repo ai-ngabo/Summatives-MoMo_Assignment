@@ -38,6 +38,12 @@ function extractRecipientDetails(body) {
     };
 }
 
+// Normalize raw date string to "YYYY-MM-DD HH:MM:SS" format
+function normalizeDate(rawDate) {
+    const d = new Date(rawDate);
+    return isNaN(d.getTime()) ? "unknown date" : d.toISOString().replace("T", " ").slice(0, 19);
+}
+
 // Categorize transaction type
 function categorizeTransaction(body) {
     const lower = body.toLowerCase();
