@@ -82,7 +82,7 @@ function cleanSMS(smsList) {
     const cleaned = [];
 
     for (const sms of smsList) {
-        const amount = extractAmount(sms.body);
+        let amount = extractAmount(sms.body);
         const fee = extractFee(sms.body);
         const new_balance = extractNewBalance(sms.body);
         const date = extractDate(sms.body);
