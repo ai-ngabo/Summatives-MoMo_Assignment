@@ -77,7 +77,7 @@ function cleanSMS(smsList) {
 
 // Debug block
 if (require.main === module) {
-    const smsData = parseSMSFromFile(path.join(__dirname, "../sms_data/raw_sms.xml"));
+    const smsData = parseSMSFromFile(path.join(__dirname, "../../sms_data/sms.xml"));
     const cleaned = cleanSMS(smsData);
 
     console.log("\n--- Cleaned & Categorized Messages ---\n");
