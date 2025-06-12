@@ -9,46 +9,57 @@ function logWarning(message) {
     logFile.write(`[WARNING] ${new Date().toISOString()} - ${message}\n`);
 }
 
-function logError(message) {
-    logFile.write(`[ERROR] ${new Date().toISOString()} - ${message}\n`);
-}
-
-// Extract amount from SMS body
+// Extract transaction amount
 function extractAmount(body) {
     const match = body.match(/(\d+)\sRWF/);
     return match ? parseInt(match[1]) : null;
 }
 
-// Extract sender from body
-function extractSender(body) {
-    const match = body.match(/from ([\w\s]+) \(\d+\)/i);
-    return match ? match[1].trim() : "Unknown Sender"; // Should always exist
+// Extract transaction fee
+function extractFee(body) {
+    const match = body.match(/Fee was:\s(\d+)\sRWF/);
+    return match ? parseInt(match[1]) : null;
 }
 
-// Extract recipient & recipient code
+// Extract new balance
+function extractNewBalance(body) {
+    const match = body.match(/Your new balance:\s(\d+)\sRWF|Your NEW BALANCE :(\d+)\sRWF|New balance:\s(\d+)\sRWF|Your new balance:(\d+)\sRWF/i);
+    return match ? parseInt(match[1]) : null;
+}
+
+
+// Extract transaction date
+function extractDate(body) {
+    const match = body.match(/at\s(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})/);
+    return match ? match[1] : "Unknown Date";
+}
+
+// Extract recipient details (name & phone number)
 function extractRecipientDetails(body) {
-    const match = body.match(/to ([\w\s]+) (\d+)\s/i);
-    if (match) {
-        return { recipient_name: match[1].trim(), recipient_code: match[2].trim() };
-    }
-
-    const fallbackMatch = body.match(/to ([\w\s]+)/i);
-    return fallbackMatch ? { recipient_name: fallbackMatch[1].trim(), recipient_code: null } : { recipient_name: "Unknown Recipient", recipient_code: null };
+    const match = body.match(/transferred to ([\w\s]+) \((\d+)\)|to ([\w\s]+) (\d+)|payment of \d+ RWF to ([\w\s]+) \((\d+)\)/i);
+    return match ? { recipient_name: match[1].trim(), recipient_phone: match[2] } : { recipient_name: "Unknown", recipient_phone: null };
 }
 
-// Categorize based on keywords
+// Extract sender details
+function extractSender(body) {
+    const match = body.match(/from (\d+)/);
+    return match ? match[1] : "Unknown Sender";
+}
+
+// Categorize transaction based on keywords
 function categorizeTransaction(body) {
     const lower = body.toLowerCase();
 
-    if (lower.includes("wasac") || lower.includes("water bill")) return "Water Utility Bill Payment";
-    if (lower.includes("power bill") || lower.includes("electricity")) return "Cash Power Bill Payment";
-    if (lower.includes("airtime")) return "Airtime Bill Payment";
+    if (lower.includes("transferred to")) return "Transfer to Mobile";
+    if (lower.includes("received")) return "Incoming Money";
+    if (lower.includes("payment")) return "Payment";
+    if (lower.includes("withdrawn")) return "Withdrawal";
     if (lower.includes("bundle")) return "Internet/Voice Bundle Purchase";
     if (lower.includes("deposit")) return "Bank Deposit";
-    if (lower.includes("withdrawn") || lower.includes("agent")) return "Withdrawal from Agent";
-    if (lower.includes("transferred")) return "Bank Transfer";
-    if (lower.includes("payment")) return "Payment";
-    if (lower.includes("received")) return "Incoming Money";
+    if (lower.includes("airtime")) return "Airtime Bill Payment";
+    if (lower.includes("Cash Power")) return "Cash Power Bill Payment";
+    if (lower.includes("wasac")) return "Water Utility Bill Payment";
+    if (lower.includes("agent")) return "Withdrawal from Agent";
 
     logWarning(`Unrecognized transaction: ${body}`);
     return "Unknown";
@@ -60,22 +71,27 @@ function cleanSMS(smsList) {
 
     for (const sms of smsList) {
         const amount = extractAmount(sms.body);
+        const fee = extractFee(sms.body);
+        const new_balance = extractNewBalance(sms.body);
+        const date = extractDate(sms.body);
         const sender = extractSender(sms.body);
-        const { recipient_name, recipient_code } = extractRecipientDetails(sms.body);
+        const { recipient_name, recipient_phone } = extractRecipientDetails(sms.body);
         const transactionType = categorizeTransaction(sms.body);
 
-        if (amount === null) {
+        if (!amount) {
             logWarning(`Skipping SMS due to missing amount: ${sms.body}`);
             continue;
         }
 
         cleaned.push({
             body: sms.body,
-            date: sms.date,
+            date,
             amount,
             sender,
             recipient_name,
-            recipient_code,
+            recipient_phone,
+            fee,
+            new_balance,
             transaction_type: transactionType
         });
     }
@@ -92,9 +108,11 @@ if (require.main === module) {
     for (const msg of cleaned.slice(0, 5)) {
         console.log(`Type: ${msg.transaction_type}`);
         console.log(`Amount: ${msg.amount} RWF`);
+        console.log(`Fee: ${msg.fee || "N/A"} RWF`);
+        console.log(`New Balance: ${msg.new_balance || "N/A"} RWF`);
         console.log(`Sender: ${msg.sender}`);
         console.log(`Recipient Name: ${msg.recipient_name}`);
-        console.log(`Recipient Code: ${msg.recipient_code || "N/A"}`);
+        console.log(`Recipient Phone: ${msg.recipient_phone || "N/A"}`);
         console.log(`Date: ${msg.date}`);
         console.log(`Message: ${msg.body.slice(0, 60)}...`);
         console.log("-".repeat(40));
