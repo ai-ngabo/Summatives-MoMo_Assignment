@@ -1,14 +1,15 @@
 import xml.etree.ElementTree as ET
 
-def parse_sms(file_path):
+# A function to parse an XML file and extract SMS message key details!
+def parse_sms(_file__path):
     """Reads an XML file and extracts SMS message details."""
     try:
-        tree = ET.parse(file_path)  # Load and parse XML file
+        tree = ET.parse(_file__path)  # Load and parse XML file
         root = tree.getroot()  # Get the root element
 
-        sms_list = []  # Store parsed messages
+        sms_list = []  # Store parsed messages into a list
 
-        for sms in root.findall("sms"):  # Loop through all SMS entries
+        for sms in root.findall("sms"):  # Loop through all SMS given
             sms_data = {
                 "body": sms.attrib.get("body", "").strip(),
                 "date": sms.attrib.get("date", ""),
@@ -20,8 +21,3 @@ def parse_sms(file_path):
     except Exception as e:
         print(f"Error parsing XML file: {e}")
         return []
-
-# Example usage:
-sms_data = parse_sms("../sms_data/sms.xml")
-#debugging
-print(sms_data[:5])  # Show first few parsed messages
