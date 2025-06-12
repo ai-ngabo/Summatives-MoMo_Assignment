@@ -22,5 +22,5 @@ function parseSMSFromFile(filePath) {
 module.exports = { parseSMSFromFile };
 
 // Example usage
-// const smsList = parseSMSFromFile("../../sms_data/sms.xml");
-// console.log(smsList);
+const smsList = parseSMSFromFile("../../sms_data/sms.xml");
+console.log(smsList);
