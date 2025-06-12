@@ -9,9 +9,8 @@ function logWarning(message) {
     logFile.write(`[WARNING] ${new Date().toISOString()} - ${message}\n`);
 }
 
-// function to extract sender
+// Extract sender
 function extractSender(body) {
-    // Try format: "from Jane Smith (*********123)"
     const match = body.match(/from ([\w\s]+) \(\*+\d+\)/i);
     return match ? match[1].trim().toLowerCase() : "unknown sender";
 }
@@ -30,17 +29,19 @@ function extractAmount(body) {
 
 // Extract fee
 function extractFee(body) {
-    const match = body.match(/Fee was:\s(\d+)\sRWF/);
+    const match = body.match(/Fee was:\s(\d+)\sRWF/i);
     return match ? parseInt(match[1], 10) : null;
 }
 
-// Extract new balance (handles multiple patterns)
+// Extract new balance
 function extractNewBalance(body) {
-    const match = body.match(/Your new balance:\s(\d+)\sRWF|Your NEW BALANCE :(\d+)\sRWF|New balance:\s(\d+)\sRWF|Your new balance:(\d+)\sRWF/i);
+    const match = body.match(
+        /Your new balance:\s(\d+)\sRWF|Your NEW BALANCE :(\d+)\sRWF|New balance:\s(\d+)\sRWF|Your new balance:(\d+)\sRWF/i
+    );
     return match ? parseInt(match[1] || match[2] || match[3] || match[4], 10) : null;
 }
 
-// Extract transaction date
+// Extract recipient name and phone
 function extractRecipientDetails(body) {
     const match = body.match(/to ([\w\s]+?) (\d{4,})|to ([\w\s]+) \((\d+)\)/i);
     const name = match ? (match[1] || match[3]) : "unknown";
@@ -51,7 +52,7 @@ function extractRecipientDetails(body) {
     };
 }
 
-// Normalize raw date string to "YYYY-MM-DD HH:MM:SS" format
+// Normalize date to "YYYY-MM-DD HH:MM:SS"
 function normalizeDate(rawDate) {
     const d = new Date(rawDate);
     return isNaN(d.getTime()) ? "unknown date" : d.toISOString().replace("T", " ").slice(0, 19);
@@ -64,7 +65,7 @@ function categorizeTransaction(body) {
     if (lower.includes("you have received")) return "Incoming Money";
     if (lower.includes("you have transferred") || lower.includes("transferred")) return "Transfer to Mobile";
     if (lower.includes("payment to code") || lower.includes("payment of")) return "Payment to Code Holder";
-    if (lower.includes("bank deposit")) return "Bank Deposit";
+    if (lower.includes("bank deposit") || lower.includes("cash deposit")) return "Bank Deposit";
     if (lower.includes("withdrawn") && lower.includes("via agent")) return "Withdrawal from Agent";
     if (lower.includes("bank transfer")) return "Bank Transfer";
     if (lower.includes("airtime")) return "Airtime Bill Payment";
@@ -76,6 +77,7 @@ function categorizeTransaction(body) {
     logWarning(`Unrecognized transaction: ${body}`);
     return "Unknown";
 }
+
 // Clean SMS list
 function cleanSMS(smsList) {
     const cleaned = [];
@@ -110,27 +112,29 @@ function cleanSMS(smsList) {
 
     return cleaned;
 }
-console.log(Array.isArray(cleaned)); // should log: true
-console.log(`Number of cleaned SMS: ${cleaned.length}`);
-// Debug block
+
+// Export if used as module
+module.exports = { cleanSMS };
+
+// Run if executed directly
 if (require.main === module) {
     const smsData = parseSMSFromFile(path.join(__dirname, "../../sms_data/sms.xml"));
     const cleaned = cleanSMS(smsData);
 
-    console.log(Array.isArray(cleaned)); // should log: true
-    console.log(`Number of cleaned SMS: ${cleaned.length}`);
+    console.log("✅ Is cleaned an array?", Array.isArray(cleaned));
+    console.log(`📊 Number of cleaned SMS: ${cleaned.length}`);
+
+    console.log("\n--- Sample Cleaned Transactions ---\n");
+    for (const msg of cleaned.slice(0, 5)) {
+        console.log(`Type: ${msg.transaction_type}`);
+        console.log(`Amount: ${msg.amount} RWF`);
+        console.log(`Fee: ${msg.fee} RWF`);
+        console.log(`New Balance: ${msg.new_balance}`);
+        console.log(`Sender: ${msg.sender}`);
+        console.log(`Recipient Name: ${msg.recipient_name}`);
+        console.log(`Recipient Phone: ${msg.recipient_phone}`);
+        console.log(`Date: ${msg.date}`);
+        console.log(`Message: ${msg.body.slice(0, 60)}...`);
+        console.log("-".repeat(40));
+    }
 }
-//     console.log("\n--- Cleaned & Categorized Messages ---\n");
-//     for (const msg of cleaned.slice(0, 5)) {
-//         console.log(`Type: ${msg.transaction_type}`);
-//         console.log(`Amount: ${msg.amount} RWF`);
-//         console.log(`Fee: ${msg.fee} RWF`);
-//         console.log(`New Balance: ${msg.new_balance}`);
-//         console.log(`Sender: ${msg.sender}`);
-//         console.log(`Recipient Name: ${msg.recipient_name}`);
-//         console.log(`Recipient Phone: ${msg.recipient_phone}`);
-//         console.log(`Date: ${msg.date}`);
-//         console.log(`Message: ${msg.body.slice(0, 60)}...`);
-//         console.log("-".repeat(40));
-//     }
-// }
