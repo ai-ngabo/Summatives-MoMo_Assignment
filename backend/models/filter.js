@@ -28,27 +28,10 @@ function extractNewBalance(body) {
 }
 
 // Extract transaction date
-function extractDate(body) {
-    const match = body.match(/at\s(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})/);
-    return match ? match[1] : null;
-}
-
-// Extract sender
-function extractSender(body) {
-    const match = body.match(/from (\d+)/);
-    return match ? match[1] : null;
-}
-
-// Extract recipient name & phone
 function extractRecipientDetails(body) {
-    const match = body.match(
-        /transferred to ([\w\s]+) \((\d+)\)|to ([\w\s]+) (\d+)|payment of \d+ RWF to ([\w\s]+) \((\d+)\)/i
-    );
-    if (!match) {
-        return { recipient_name: "Unknown", recipient_phone: null };
-    }
-    const name = match[1] || match[3] || match[5];
-    const phone = match[2] || match[4] || match[6];
+    const match = body.match(/to ([\w\s]+?) (\d{4,})|to ([\w\s]+) \((\d+)\)/i);
+    const name = match ? (match[1] || match[3]) : "unknown";
+    const phone = match ? (match[2] || match[4]) : null;
     return {
         recipient_name: name ? name.trim().toLowerCase() : "unknown",
         recipient_phone: phone || "N/A"
@@ -58,9 +41,10 @@ function extractRecipientDetails(body) {
 // Categorize transaction type
 function categorizeTransaction(body) {
     const lower = body.toLowerCase();
+
     if (lower.includes("you have received")) return "Incoming Money";
-    if (lower.includes("you have transferred")) return "Transfer to Mobile";
-    if (lower.includes("payment to code")) return "Payment to Code Holder";
+    if (lower.includes("you have transferred") || lower.includes("transferred")) return "Transfer to Mobile";
+    if (lower.includes("payment to code") || lower.includes("payment of")) return "Payment to Code Holder";
     if (lower.includes("bank deposit")) return "Bank Deposit";
     if (lower.includes("withdrawn") && lower.includes("via agent")) return "Withdrawal from Agent";
     if (lower.includes("bank transfer")) return "Bank Transfer";
@@ -72,13 +56,6 @@ function categorizeTransaction(body) {
     logWarning(`Unrecognized transaction: ${body}`);
     return "Unknown";
 }
-
-// Normalize date to ISO format
-function normalizeDate(raw) {
-    const d = new Date(raw);
-    return isNaN(d.getTime()) ? "unknown date" : d.toISOString().replace("T", " ").slice(0, 19);
-}
-
 // Clean SMS list
 function cleanSMS(smsList) {
     const cleaned = [];
