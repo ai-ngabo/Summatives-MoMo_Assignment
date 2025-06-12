@@ -9,75 +9,74 @@ function logWarning(message) {
     logFile.write(`[WARNING] ${new Date().toISOString()} - ${message}\n`);
 }
 
-// Extract transaction amount
+// Extract amount
 function extractAmount(body) {
     const match = body.match(/(\d+)\sRWF/);
-    return match ? parseInt(match[1]) : null;
+    return match ? parseInt(match[1], 10) : null;
 }
 
-// Extract transaction fee
+// Extract fee
 function extractFee(body) {
     const match = body.match(/Fee was:\s(\d+)\sRWF/);
-    return match ? parseInt(match[1]) : null;
+    return match ? parseInt(match[1], 10) : null;
 }
 
-// Extract new balance
+// Extract new balance (handles multiple patterns)
 function extractNewBalance(body) {
     const match = body.match(/Your new balance:\s(\d+)\sRWF|Your NEW BALANCE :(\d+)\sRWF|New balance:\s(\d+)\sRWF|Your new balance:(\d+)\sRWF/i);
-    return match ? parseInt(match[1] || match[2] || match[3] || match[4]) : null;
+    return match ? parseInt(match[1] || match[2] || match[3] || match[4], 10) : null;
 }
-
 
 // Extract transaction date
 function extractDate(body) {
     const match = body.match(/at\s(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})/);
-    return match ? match[1] : "Unknown Date";
+    return match ? match[1] : null;
 }
 
- //Extract recipient details from the SMS message body.
-function extractRecipientDetails(body) {
-    const match = body.match(/transferred to ([\w\s]+) \((\d+)\)|to ([\w\s]+) (\d+)|payment of \d+ RWF to ([\w\s]+) \((\d+)\)/i);
-    
-    if (!match) {
-        // If no match is found, return an object with default values
-        return { recipient_name: "Unknown", recipient_phone: null };
-    }
-
-    const recipient_name = match[1] || match[3] || match[5];
-    const recipient_phone = match[2] || match[4] || match[6];
-
-    // Return an object with the extracted values
-    return { 
-        recipient_name: recipient_name ? recipient_name.trim() : "Unknown", 
-        recipient_phone 
-    };
-    return { recipient_name: recipient_name ? recipient_name.trim() : "Unknown", recipient_phone };
-}
-/*******  9f58c072-ca58-40ee-af2a-f88e7e9286a1  *******/
-
-// Extract sender details
+// Extract sender
 function extractSender(body) {
     const match = body.match(/from (\d+)/);
-    return match ? match[1] : "Unknown Sender";
+    return match ? match[1] : null;
 }
 
-// Categorize transaction based on keywords
+// Extract recipient name & phone
+function extractRecipientDetails(body) {
+    const match = body.match(
+        /transferred to ([\w\s]+) \((\d+)\)|to ([\w\s]+) (\d+)|payment of \d+ RWF to ([\w\s]+) \((\d+)\)/i
+    );
+    if (!match) {
+        return { recipient_name: "Unknown", recipient_phone: null };
+    }
+    const name = match[1] || match[3] || match[5];
+    const phone = match[2] || match[4] || match[6];
+    return {
+        recipient_name: name ? name.trim().toLowerCase() : "unknown",
+        recipient_phone: phone || "N/A"
+    };
+}
+
+// Categorize transaction type
 function categorizeTransaction(body) {
     const lower = body.toLowerCase();
-
-    if (lower.includes("transferred to")) return "Transfer to Mobile";
-    if (lower.includes("received")) return "Incoming Money";
-    if (lower.includes("payment")) return "Payment";
-    if (lower.includes("withdrawn")) return "Withdrawal";
-    if (lower.includes("bundle")) return "Internet/Voice Bundle Purchase";
-    if (lower.includes("deposit")) return "Bank Deposit";
+    if (lower.includes("you have received")) return "Incoming Money";
+    if (lower.includes("you have transferred")) return "Transfer to Mobile";
+    if (lower.includes("payment to code")) return "Payment to Code Holder";
+    if (lower.includes("bank deposit")) return "Bank Deposit";
+    if (lower.includes("withdrawn") && lower.includes("via agent")) return "Withdrawal from Agent";
+    if (lower.includes("bank transfer")) return "Bank Transfer";
     if (lower.includes("airtime")) return "Airtime Bill Payment";
-    if (lower.includes("Cash Power")) return "Cash Power Bill Payment";
+    if (lower.includes("power bill")) return "Cash Power Bill Payment";
     if (lower.includes("wasac")) return "Water Utility Bill Payment";
-    if (lower.includes("agent")) return "Withdrawal from Agent";
+    if (lower.includes("bundle")) return "Internet/Voice Bundle Purchase";
 
     logWarning(`Unrecognized transaction: ${body}`);
     return "Unknown";
+}
+
+// Normalize date to ISO format
+function normalizeDate(raw) {
+    const d = new Date(raw);
+    return isNaN(d.getTime()) ? "unknown date" : d.toISOString().replace("T", " ").slice(0, 19);
 }
 
 // Clean SMS list
@@ -86,17 +85,18 @@ function cleanSMS(smsList) {
 
     for (const sms of smsList) {
         const amount = extractAmount(sms.body);
-        const fee = extractFee(sms.body);
-        const new_balance = extractNewBalance(sms.body);
-        const date = extractDate(sms.body);
-        const sender = extractSender(sms.body);
-        const { recipient_name, recipient_phone } = extractRecipientDetails(sms.body);
-        const transactionType = categorizeTransaction(sms.body);
-
         if (!amount) {
             logWarning(`Skipping SMS due to missing amount: ${sms.body}`);
             continue;
         }
+
+        const fee = extractFee(sms.body) || 0;
+        const new_balance = extractNewBalance(sms.body) || "N/A";
+        const date = normalizeDate(extractDate(sms.body));
+        const senderRaw = extractSender(sms.body);
+        const sender = senderRaw ? senderRaw.trim().toLowerCase() : "unknown sender";
+        const { recipient_name, recipient_phone } = extractRecipientDetails(sms.body);
+        const transaction_type = categorizeTransaction(sms.body) || "Unknown";
 
         cleaned.push({
             body: sms.body,
@@ -107,7 +107,7 @@ function cleanSMS(smsList) {
             recipient_phone,
             fee,
             new_balance,
-            transaction_type: transactionType
+            transaction_type
         });
     }
 
@@ -123,11 +123,11 @@ if (require.main === module) {
     for (const msg of cleaned.slice(0, 5)) {
         console.log(`Type: ${msg.transaction_type}`);
         console.log(`Amount: ${msg.amount} RWF`);
-        console.log(`Fee: ${msg.fee || "N/A"} RWF`);
-        console.log(`New Balance: ${msg.new_balance || "N/A"} RWF`);
+        console.log(`Fee: ${msg.fee} RWF`);
+        console.log(`New Balance: ${msg.new_balance}`);
         console.log(`Sender: ${msg.sender}`);
         console.log(`Recipient Name: ${msg.recipient_name}`);
-        console.log(`Recipient Phone: ${msg.recipient_phone || "N/A"}`);
+        console.log(`Recipient Phone: ${msg.recipient_phone}`);
         console.log(`Date: ${msg.date}`);
         console.log(`Message: ${msg.body.slice(0, 60)}...`);
         console.log("-".repeat(40));
