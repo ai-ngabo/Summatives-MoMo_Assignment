@@ -24,7 +24,7 @@ function extractFee(body) {
 // Extract new balance
 function extractNewBalance(body) {
     const match = body.match(/Your new balance:\s(\d+)\sRWF|Your NEW BALANCE :(\d+)\sRWF|New balance:\s(\d+)\sRWF|Your new balance:(\d+)\sRWF/i);
-    return match ? parseInt(match[1]) : null;
+    return match ? parseInt(match[1] || match[2] || match[3] || match[4]) : null;
 }
 
 
