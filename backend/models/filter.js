@@ -35,10 +35,8 @@ function extractFee(body) {
 
 // Extract new balance
 function extractNewBalance(body) {
-    const match = body.match(
-        /Your new balance:\s(\d+)\sRWF|Your NEW BALANCE :(\d+)\sRWF|New balance:\s(\d+)\sRWF|Your new balance:(\d+)\sRWF/i
-    );
-    return match ? parseInt(match[1] || match[2] || match[3] || match[4], 10) : null;
+    const match = body.match(/(?:your\s+new\s+balance|new\s+balance|balance)[\s:]*([\d,]+)\sRWF/i);
+    return match ? parseInt(match[1].replace(/,/g, ""), 10) : null;
 }
 
 // Extract recipient name and phone
