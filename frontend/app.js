@@ -10,5 +10,5 @@ db.all("SELECT date, amount, sender, recipient_name, transaction_type FROM trans
     const fs = require("fs");
     fs.writeFileSync("transactions.json", JSON.stringify(rows, null, 2));
 
-    console.log("✅ Transactions saved to transactions.json");
+    console.log("Transactions saved to transactions.json");
 });
