@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "fast-xml-parser": "^5.2.5"
+    "fast-xml-parser": "^5.2.5",
+    "sqlite3": "^5.1.7"
   }
 }
