@@ -8,26 +8,53 @@
     <script defer src="app.js"></script>
 </head>
 <body>
-    <h1>MoMo Transactions</h1>
+    <header>
+        <h1>MoMo Transactions Dashboard</h1>
+    </header>
 
-    <div>
-        <label for="filterType">Filter by Transaction Type:</label>
-        <select id="filterType">
+    <!-- Quick Stats -->
+    <section class="stats">
+        <div>Total Transactions: <span id="totalTransactions">0</span></div>
+        <div>Inflow: <span id="totalInflow">0</span></div>
+        <div>Outflow: <span id="totalOutflow">0</span></div>
+    </section>
+
+    <!-- Filters -->
+    <section class="filters">
+        <label for="transactionType">Transaction Type:</label>
+        <select id="transactionType">
             <option value="All">All</option>
         </select>
-    </div>
 
-    <table id="transactionsTable">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Sender</th>
-                <th>Recipient</th>
-                <th>Transaction Type</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+        <label for="dateRange">Date Range:</label>
+        <input type="date" id="startDate">
+        <input type="date" id="endDate">
+
+        <label for="amountRange">Amount Range:</label>
+        <input type="number" id="minAmount" placeholder="Min">
+        <input type="number" id="maxAmount" placeholder="Max">
+    </section>
+
+    <!-- Transactions Table -->
+    <section class="transactions">
+        <table id="transactionsTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Sender</th>
+                    <th>Recipient</th>
+                    <th>Transaction Type</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- Graphs -->
+    <section class="charts">
+        <canvas id="transactionTrends"></canvas>
+        <canvas id="transactionBreakdown"></canvas>
+    </section>
 </body>
 </html>
