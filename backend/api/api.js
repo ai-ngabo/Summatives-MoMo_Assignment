@@ -6,7 +6,7 @@ const db = new sqlite3.Database(path.join(__dirname, "../models/transactions.db"
 const app = express();
 
 app.get("/transactions", (req, res) => {
-    db.all("SELECT date, amount, sender, recipient_name, recipient_phone, fee, new_balance, transaction_type FROM transactions ORDER BY date DESC LIMIT 50;", (err, rows) => {
+    db.all("SELECT * FROM transactions ORDER BY date DESC;", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
