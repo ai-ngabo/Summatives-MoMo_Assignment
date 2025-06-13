@@ -20,14 +20,13 @@ function insertTransaction(tx) {
     `);
 
     stmt.run([
-        tx.body,
         tx.date,
-        tx.amount,
+        parseInt(tx.amount, 10),
         tx.sender,
         tx.recipient_name,
         tx.recipient_phone,
-        tx.fee,
-        tx.new_balance,
+        parseInt(tx.fee, 10),
+        tx.new_balance ? parseInt(tx.new_balance, 10) : null,
         tx.transaction_type
     ]);
 
