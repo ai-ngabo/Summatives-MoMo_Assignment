@@ -1,14 +1,52 @@
-const sqlite3 = require("sqlite3").verbose();
-const path = require("path");
+document.addEventListener("DOMContentLoaded", () => {
+    const transactionsTable = document.querySelector("#transactionsTable tbody");
+    const transactionType = document.querySelector("#transactionType");
+    const totalTransactions = document.querySelector("#totalTransactions");
+    const totalInflow = document.querySelector("#totalInflow");
+    const totalOutflow = document.querySelector("#totalOutflow");
 
-const db = new sqlite3.Database(path.join(__dirname, "../models/transactions.db"));
+    // Load Data from SQLite via JSON
+    fetch("transactions.json")
+        .then(response => response.json())
+        .then(transactions => {
+            populateTransactionTypes(transactions);
+            displayTransactions(transactions);
+            calculateStats(transactions);
+        });
 
-db.all("SELECT date, amount, sender, recipient_name, transaction_type FROM transactions ORDER BY date DESC;", (err, rows) => {
-    if (err) return console.error("Database Error:", err);
-    
-    // Save results to a JSON file
-    const fs = require("fs");
-    fs.writeFileSync("transactions.json", JSON.stringify(rows, null, 2));
+    function populateTransactionTypes(transactions) {
+        const uniqueTypes = [...new Set(transactions.map(tx => tx.transaction_type))];
+        uniqueTypes.forEach(type => {
+            transactionType.innerHTML += `<option value="${type}">${type}</option>`;
+        });
+    }
 
-    console.log("Transactions saved to transactions.json");
+    function displayTransactions(transactions) {
+        transactionsTable.innerHTML = "";
+        transactions.forEach(tx => {
+            const row = `<tr>
+                <td>${tx.date}</td>
+                <td>${tx.amount}</td>
+                <td>${tx.sender}</td>
+                <td>${tx.recipient_name}</td>
+                <td>${tx.transaction_type}</td>
+            </tr>`;
+            transactionsTable.innerHTML += row;
+        });
+    }
+
+    function calculateStats(transactions) {
+        totalTransactions.textContent = transactions.length;
+        totalInflow.textContent = transactions.filter(tx => tx.amount > 0).length;
+        totalOutflow.textContent = transactions.filter(tx => tx.amount < 0).length;
+    }
+
+    transactionType.addEventListener("change", () => {
+        fetch("transactions.json")
+            .then(response => response.json())
+            .then(transactions => {
+                const filtered = transactions.filter(tx => transactionType.value === "All" || tx.transaction_type === transactionType.value);
+                displayTransactions(filtered);
+            });
+    });
 });
