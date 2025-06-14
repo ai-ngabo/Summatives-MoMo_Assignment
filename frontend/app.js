@@ -1,56 +1,60 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const transactionsTable = document.querySelector("#transactionsTable tbody");
-    const transactionType = document.querySelector("#transactionType");
-    const totalTransactions = document.querySelector("#totalTransactions");
-    const totalInflow = document.querySelector("#totalInflow");
-    const totalOutflow = document.querySelector("#totalOutflow");
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import "./styles.css";
 
-    // Load Data from SQLite via JSON
-    fetch("transactions.json")
-        .then(response => response.json())
-        .then(transactions => {
-            populateTransactionTypes(transactions); // Populate dropdown
-            displayTransactions(transactions); // Show transactions in table
-            generateCharts(transactions); // Create graphs
+function App() {
+    const [transactions, setTransactions] = useState([]);
+    const [totalSent, setTotalSent] = useState(0);
+    const [totalReceived, setTotalReceived] = useState(0);
+
+    useEffect(() => {
+        axios.get("transactions.json")
+            .then(response => {
+                setTransactions(response.data);
+                calculateTotals(response.data);
+            });
+    }, []);
+
+    const calculateTotals = (data) => {
+        let sent = 0, received = 0;
+        data.forEach(tx => {
+            if (tx.amount < 0) sent += Math.abs(tx.amount);
+            else received += tx.amount;
         });
+        setTotalSent(sent);
+        setTotalReceived(received);
+    };
 
-    function populateTransactionTypes(transactions) {
-    const transactionType = document.getElementById("transactionType");
-    transactionType.innerHTML = `<option value="All">All</option>`; // Default option
+    return (
+        <div className="dashboard">
+            <h1>MoMo Analytics</h1>
+            <div className="stats">
+                <div>Total Transactions: {transactions.length}</div>
+                <div>Total Sent: ${totalSent}</div>
+                <div>Total Received: ${totalReceived}</div>
+            </div>
+            <div className="charts">
+                <ResponsiveContainer width="50%" height={300}>
+                    <LineChart data={transactions}>
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="amount" stroke="#007bff" />
+                    </LineChart>
+                </ResponsiveContainer>
 
-    const uniqueTypes = [...new Set(transactions.map(tx => tx.transaction_type))]; // Get unique types
-    uniqueTypes.forEach(type => {
-        transactionType.innerHTML += `<option value="${type}">${type}</option>`;
-    });
+                <ResponsiveContainer width="50%" height={300}>
+                    <PieChart>
+                        <Pie data={[{name: "Sent", value: totalSent}, {name: "Received", value: totalReceived}]} dataKey="value">
+                            <Cell fill="#dc3545" />
+                            <Cell fill="#28a745" />
+                        </Pie>
+                    </PieChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+    );
 }
 
-
-    function displayTransactions(transactions) {
-        transactionsTable.innerHTML = "";
-        transactions.forEach(tx => {
-            const row = `<tr>
-                <td>${tx.date}</td>
-                <td>${tx.amount}</td>
-                <td>${tx.sender}</td>
-                <td>${tx.recipient_name}</td>
-                <td>${tx.transaction_type}</td>
-            </tr>`;
-            transactionsTable.innerHTML += row;
-        });
-    }
-
-    function calculateStats(transactions) {
-        totalTransactions.textContent = transactions.length;
-        totalInflow.textContent = transactions.filter(tx => tx.amount > 0).length;
-        totalOutflow.textContent = transactions.filter(tx => tx.amount < 0).length;
-    }
-
-    transactionType.addEventListener("change", () => {
-        fetch("transactions.json")
-            .then(response => response.json())
-            .then(transactions => {
-                const filtered = transactions.filter(tx => transactionType.value === "All" || tx.transaction_type === transactionType.value);
-                displayTransactions(filtered);
-            });
-    });
-});
+export default App;
