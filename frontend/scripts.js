@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
     fetch("https://summatives-momo-assignment.onrender.com/transactions")
         .then(response => response.json())
+        .then(data => console.log("Fetched Data:", data))
+        .catch(error => console.error("Fetch Error:", error))
         .then(transactions => {
             populateTransactionTypes(transactions);
             calculateTotals(transactions);
@@ -60,5 +62,5 @@ function generateCharts(transactions) {
 }
 
 function fetchAPI() {
-    window.location.href = "https://api.example.com/momo-transactions";
+    window.location.href = "https://summatives-momo-assignment.onrender.com/transactions";
 }

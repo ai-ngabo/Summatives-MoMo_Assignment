@@ -4,6 +4,8 @@ const express = require("express");
 
 const db = new sqlite3.Database(path.join(__dirname, "./backend/models/transactions.db"));
 const app = express();
+const cors = require("cors");
+app.use(cors()); // Allow frontend requests
 
 app.get("/transactions", (req, res) => {
     db.all("SELECT date, amount, sender, recipient_name, recipient_phone, fee, new_balance, transaction_type FROM transactions ORDER BY date DESC;", (err, rows) => {
@@ -13,5 +15,3 @@ app.get("/transactions", (req, res) => {
 });
 
 app.listen(5000, () => console.log("API running at link http://localhost:5000"));
-const cors = require("cors");
-app.use(cors()); // Allow frontend requests
