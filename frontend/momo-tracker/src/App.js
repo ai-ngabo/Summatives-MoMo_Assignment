@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import "./styles.css";
+import "./App.css";
 
 function App() {
     const [transactions, setTransactions] = useState([]);
