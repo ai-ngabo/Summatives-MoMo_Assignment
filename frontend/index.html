@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoMo Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>MoMo Tracker</h1>
+    </header>
+
+    <div class="filters">
+        <label for="dateFilter">Select Date:</label>
+        <input type="month" id="dateFilter">
+
+        <label for="transactionType">Transaction Type:</label>
+        <select id="transactionType">
+            <option value="All">All</option>
+        </select>
+    </div>
+
+    <div class="stats">
+        <div>Total Received: <span id="totalReceived">0 RWF</span></div>
+        <div>Total Sent: <span id="totalSent">0 RWF</span></div>
+    </div>
+
+    <div class="charts">
+        <div class="chart-container">
+            <canvas id="barChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="pieChart"></canvas>
+        </div>
+    </div>
+
+    <div class="api-link">
+        <button onclick="fetchAPI()">View API Data</button>
+    </div>
+</body>
+</html>
