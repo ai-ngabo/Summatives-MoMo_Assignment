@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    fetch("transactions.json")
+    fetch("https://summatives-momo-assignment.onrender.com/transactions")
         .then(response => response.json())
         .then(transactions => {
             populateTransactionTypes(transactions);
