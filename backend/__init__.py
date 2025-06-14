@@ -1,1 +1,0 @@
-from backend.models.sms_parser import parse_sms

@@ -2,7 +2,7 @@ const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 const express = require("express");
 
-const db = new sqlite3.Database(path.join(__dirname, "../models/transactions.db"));
+const db = new sqlite3.Database(path.join(__dirname, "../backend/models/transactions.db"));
 const app = express();
 
 app.get("/transactions", (req, res) => {
