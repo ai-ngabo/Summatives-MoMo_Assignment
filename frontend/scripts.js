@@ -1,13 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
-    fetch("https://summatives-momo-assignment.onrender.com/transactions")
+    fetch("../backend/models/transactions.db.json()")
         .then(response => response.json())
         .then(data => console.log("Fetched Data:", data))
-        .catch(error => console.error("Fetch Error:", error))
         .then(transactions => {
             populateTransactionTypes(transactions);
             calculateTotals(transactions);
             generateCharts(transactions);
-        });
+        })
+        .catch(error => console.error("Fetch Error:", error));
 });
 
 function populateTransactionTypes(transactions) {
