@@ -29,3 +29,10 @@ h1 {
     display: flex;
     justify-content: space-evenly;
 }
+
+.filters select {
+  padding: 6px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
