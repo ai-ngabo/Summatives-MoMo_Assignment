@@ -2,7 +2,7 @@
     const ctxTrends = document.getElementById("transactionTrends").getContext("2d");
     const ctxBreakdown = document.getElementById("transactionBreakdown").getContext("2d");
 
-    // 📊 Transaction Trends Over Time (Line Chart)
+    // Transaction Trends Over Time (Line Chart)
     const groupedByDate = transactions.reduce((acc, tx) => {
         acc[tx.date] = (acc[tx.date] || 0) + tx.amount;
         return acc;

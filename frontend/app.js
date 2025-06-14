@@ -9,17 +9,21 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch("transactions.json")
         .then(response => response.json())
         .then(transactions => {
-            populateTransactionTypes(transactions);
-            displayTransactions(transactions);
-            calculateStats(transactions);
+            populateTransactionTypes(transactions); // Populate dropdown
+            displayTransactions(transactions); // Show transactions in table
+            generateCharts(transactions); // Create graphs
         });
 
     function populateTransactionTypes(transactions) {
-        const uniqueTypes = [...new Set(transactions.map(tx => tx.transaction_type))];
-        uniqueTypes.forEach(type => {
-            transactionType.innerHTML += `<option value="${type}">${type}</option>`;
-        });
-    }
+    const transactionType = document.getElementById("transactionType");
+    transactionType.innerHTML = `<option value="All">All</option>`; // Default option
+
+    const uniqueTypes = [...new Set(transactions.map(tx => tx.transaction_type))]; // Get unique types
+    uniqueTypes.forEach(type => {
+        transactionType.innerHTML += `<option value="${type}">${type}</option>`;
+    });
+}
+
 
     function displayTransactions(transactions) {
         transactionsTable.innerHTML = "";
