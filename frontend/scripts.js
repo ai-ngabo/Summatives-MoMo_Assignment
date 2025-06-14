@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
-    fetch("../backend/models/transactions.db.json()")
+    fetch("../backend/models/transactions.json") // Load local JSON file
         .then(response => response.json())
-        .then(data => console.log("Fetched Data:", data))
         .then(transactions => {
+            console.log("Fetched Data:", transactions); // Debugging Step
             populateTransactionTypes(transactions);
             calculateTotals(transactions);
             generateCharts(transactions);
@@ -19,11 +19,19 @@ function populateTransactionTypes(transactions) {
 }
 
 function calculateTotals(transactions) {
+    console.log("Raw Transactions:", transactions); // Debugging Step
+
     let received = 0, sent = 0;
+
     transactions.forEach(tx => {
-        if (tx.amount < 0) sent += Math.abs(tx.amount);
-        else received += tx.amount;
+        if (tx.transaction_type.includes("Deposit") || tx.transaction_type.includes("Incoming")) {
+            received += tx.amount; // Only bank deposits & incoming money
+        } else {
+            sent += tx.amount; // Everything else counts as money sent
+        }
     });
+
+    console.log("Total Received:", received, "Total Sent:", sent); // Debugging Step
     document.getElementById("totalReceived").textContent = `${received} RWF`;
     document.getElementById("totalSent").textContent = `${sent} RWF`;
 }

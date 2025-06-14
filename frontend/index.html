@@ -1,43 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoMo Tracker</title>
-    <link rel="stylesheet" href="styles.css">
-    <script defer src="scripts.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <header>
-        <h1>MoMo Tracker</h1>
-    </header>
+  <header class="head">
+    <h1 class="title">MOMO Tracker</h1>
+    <a id="apiLink" href="#">Connect to API</a>
+  </header>
+
+  <section class="main">
+    <div class="chart-box">
+      <canvas id="barChart"></canvas>
+    </div>
 
     <div class="filters">
-        <label for="dateFilter">Select Date:</label>
-        <input type="month" id="dateFilter">
-
-        <label for="transactionType">Transaction Type:</label>
-        <select id="transactionType">
-            <option value="All">All</option>
+      <label>
+        Type
+        <select id="type">
+          <option value="all">All</option>
         </select>
+      </label>
+      <label>
+        Start Date
+        <input type="date" id="start">
+      </label>
+      <label>
+        End Date
+        <input type="date" id="end">
+      </label>
+      <button onclick="apply()">Apply</button>
     </div>
+  </section>
 
-    <div class="stats">
-        <div>Total Received: <span id="totalReceived">0 RWF</span></div>
-        <div>Total Sent: <span id="totalSent">0 RWF</span></div>
-    </div>
+  <section class="table-box">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Type</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody id="table"></tbody>
+    </table>
+  </section>
 
-    <div class="charts">
-        <div class="chart-container">
-            <canvas id="barChart"></canvas>
-        </div>
-        <div class="chart-container">
-            <canvas id="pieChart"></canvas>
-        </div>
-    </div>
-
-    <div class="api-link">
-        <button onclick="fetchAPI()">View API Data</button>
-    </div>
+  <script src="script.js"></script>
 </body>
 </html>
