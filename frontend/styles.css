@@ -1,4 +1,4 @@
-body {
+/* body {
   font-family: sans-serif;
   background: #f4f4f4;
   margin: 0;
@@ -78,4 +78,156 @@ th, td {
   padding: 0.75rem;
   border-bottom: 1px solid #ddd;
   text-align: left;
+} */
+
+/* styles.css */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  color: #333;
+}
+
+.dashboard {
+  padding: 20px;
+  max-width: 100%;
+}
+
+.api-link {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.api-link input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.api-link button {
+  padding: 10px 20px;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.summary-box {
+  flex: 1 1 200px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.summary-box h3 {
+  margin: 0 0 10px;
+  font-size: 1.2em;
+}
+
+.summary-box p {
+  font-size: 1.4em;
+  font-weight: bold;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filters select,
+.filters input[type="date"] {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.charts {
+  flex: 1;
+  min-width: 300px;
+}
+
+.chart-container {
+  margin-bottom: 20px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.transactions {
+  flex: 1;
+  min-width: 300px;
+  overflow-x: auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.transactions table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.transactions th,
+.transactions td {
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+}
+
+.transactions th {
+  background: #007bff;
+  color: white;
+}
+
+@media screen and (max-width: 768px) {
+  .main {
+    flex-direction: column;
+  }
+
+  .charts,
+  .transactions {
+    min-width: 100%;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .api-link input[type="text"] {
+    width: 100%;
+  }
+
+  .api-link button {
+    width: 100%;
+  }
+
+  .filters {
+    flex-direction: column;
+  }
+
+  .filters select,
+  .filters input[type="date"] {
+    width: 100%;
+  }
 }
