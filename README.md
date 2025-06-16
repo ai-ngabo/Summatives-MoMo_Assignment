@@ -95,4 +95,6 @@ This repository contains the initial stage of summatives assignment to build MTN
     Alain Ishimwe Ngabo
 
 ## Additional Links
+   -**The Project Tutorial Video :** [Click This Link](https://youtu.be/DyOCMcfnlTE)
+   -**The project Report file(pdf):** [Click This Link](https://docs.google.com/document/d/1oLYNRXmmPJyO_jSDgb2NMhC4QuGw5VRRwiVLOXRk7EI/edit?tab=t.0#heading=h.gl1e368ejadr)
     
