@@ -5,7 +5,7 @@ This repository contains the initial stage of summatives assignment to build MTN
 ---
 
 <center> <h3>Project Structure</h3></center>
-"""
+
 |- Summatives-MoMo_Assignment
     |- sms_data
         |- sms.xml
@@ -29,6 +29,6 @@ This repository contains the initial stage of summatives assignment to build MTN
     |- node_modules/
     |- api.js
     |- README.md
-"""
+
 <center> <h3>Repository Contents</h3> </center>
 
