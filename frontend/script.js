@@ -1,282 +1,140 @@
-// let data = [];
-// let chart;
+let data = [];
+let chart, circularChart;
 
-// async function load() {
-//   const res = await fetch('../backend/models/transactions.json');
-//   data = await res.json();
-//   fillTypes();
-//   draw();
-// }
+async function load() {
+  try {
+    const res = await fetch("../backend/models/transactions.json");
+    data = await res.json();
+    fillTypes();
+    draw();
+  } catch (error) {
+    console.error("Error loading data:", error);
+  }
+}
 
-// function fillTypes() {
-//   const set = new Set(data.map(d => d.transaction_type));
-//   const sel = document.getElementById('type');
-//   set.forEach(t => {
-//     const opt = document.createElement('option');
-//     opt.value = t;
-//     opt.textContent = t;
-//     sel.appendChild(opt);
-//   });
-// }
+function fillTypes() {
+  const set = new Set(data.map(d => d.transaction_type));
+  const sel = document.getElementById("type");
+  set.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    sel.appendChild(opt);
+  });
+}
 
-// function draw() {
-//   const counts = {};
-//   const totals = {};
+function draw() {
+  updateVisuals(data);
+  updateTable(data);
+}
 
-//   data.forEach(d => {
-//     const t = d.transaction_type || 'Unknown';
-//     counts[t] = (counts[t] || 0) + 1;
-//     totals[t] = (totals[t] || 0) + d.amount;
-//   });
+function apply() {
+  const type = document.getElementById("type").value;
+  const start = new Date(document.getElementById("start").value);
+  const end = new Date(document.getElementById("end").value);
 
-//   const ctx = document.getElementById('barChart').getContext('2d');
-//   if (chart) chart.destroy();
+  const filtered = data.filter(d => {
+    const date = new Date(d.date);
+    return (type === "all" || d.transaction_type === type) &&
+           (!isNaN(start) ? date >= start : true) &&
+           (!isNaN(end) ? date <= end : true);
+  });
 
-//   chart = new Chart(ctx, {
-//     type: 'bar',
-//     data: {
-//       labels: Object.keys(totals),
-//       datasets: [{
-//         label: 'Total Amount (RWF)',
-//         data: Object.values(totals),
-//         backgroundColor: 'rgba(0, 119, 204, 0.7)'
-//       }]
-//     },
-//     options: {
-//       plugins: {
-//         legend: { display: false },
-//         tooltip: {
-//           callbacks: {
-//             label: function(context) {
-//               const label = context.dataset.label || '';
-//               return `${label}: ${context.parsed.y.toLocaleString()} RWF`;
-//             }
-//           }
-//         }
-//       },
-//       scales: {
-//         y: {
-//           beginAtZero: true
-//         }
-//       }
-//     }
-//   });
+  updateVisuals(filtered);
+  updateTable(filtered);
+}
 
-//   updateTable(data);
-// }
+function updateVisuals(dataset) {
+  const counts = {};
+  let received = 0, sent = 0;
 
-// function apply() {
-//   const type = document.getElementById('type').value;
-//   const start = new Date(document.getElementById('start').value);
-//   const end = new Date(document.getElementById('end').value);
+  dataset.forEach(d => {
+    const t = d.transaction_type || "Unknown";
+    counts[t] = (counts[t] || 0) + 1;
 
-//   const filtered = data.filter(d => {
-//     const date = new Date(d.date);
-//     return (type === 'all' || d.transaction_type === type) &&
-//            (!isNaN(start) ? date >= start : true) &&
-//            (!isNaN(end) ? date <= end : true);
-//   });
-
-//   updateTable(filtered);
-//   updateChart(filtered);
-// }
-
-// function updateChart(filtered) {
-//   const totals = {};
-//   filtered.forEach(d => {
-//     const t = d.transaction_type || 'Unknown';
-//     totals[t] = (totals[t] || 0) + d.amount;
-//   });
-
-//   chart.data.labels = Object.keys(totals);
-//   chart.data.datasets[0].data = Object.values(totals);
-//   chart.update();
-// }
-
-// function updateTable(rows) {
-//   const tbody = document.getElementById('table');
-//   tbody.innerHTML = '';
-
-//   rows.forEach(d => {
-//     const tr = document.createElement('tr');
-//     tr.innerHTML = `
-//       <td>${d.date}</td>
-//       <td>${d.recipient_name}</td>
-//       <td>${d.recipient_phone}</td>
-//       <td>${d.transaction_type}</td>
-//       <td>${d.amount.toLocaleString()} RWF</td>
-//     `;
-//     tbody.appendChild(tr);
-//   });
-// }
-
-// load();
-
-// script.js
-// script.js
-
-document.addEventListener("DOMContentLoaded", () => {
-  const fileInput = document.getElementById("json-file");
-  const transactionsTableBody = document.getElementById("transactions-table-body");
-  const transactionTypeFilter = document.getElementById("transaction-type-filter");
-  const dateFilter = document.getElementById("date-filter");
-
-  const totalSentBox = document.getElementById("total-sent");
-  const totalReceivedBox = document.getElementById("total-received");
-  const totalUnknownBox = document.getElementById("total-unknown");
-
-  const barChartCanvas = document.getElementById("bar-chart");
-  const pieChartCanvas = document.getElementById("pie-chart");
-
-  let originalData = [];
-
-  fileInput.addEventListener("change", handleFileUpload);
-
-  function handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        try {
-          originalData = JSON.parse(e.target.result);
-          updateDashboard(originalData);
-        } catch (error) {
-          alert("Invalid JSON file");
-        }
-      };
-      reader.readAsText(file);
+    if (t === "Bank Deposit" || t === "Incoming Money") {
+      received += d.amount;
+    } else {
+      sent += d.amount;
     }
-  }
+  });
 
-  function updateDashboard(data) {
-    populateFilters(data);
-    transactionTypeFilter.addEventListener("change", () => applyFilters(data));
-    dateFilter.addEventListener("change", () => applyFilters(data));
-    applyFilters(data);
-  }
+  document.getElementById("receivedBox").textContent = `Total Received: ${received.toLocaleString()} RWF`;
+  document.getElementById("sentBox").textContent = `Total Sent: ${sent.toLocaleString()} RWF`;
 
-  function populateFilters(data) {
-    const types = [...new Set(data.map(tx => tx.transaction_type))];
-    transactionTypeFilter.innerHTML = '<option value="">All Types</option>';
-    types.forEach(type => {
-      transactionTypeFilter.innerHTML += `<option value="${type}">${type}</option>`;
-    });
-  }
+  const labels = Object.keys(counts);
+  const values = Object.values(counts);
+  const colors = generateColors(labels.length);
 
-  function applyFilters(data) {
-    const selectedType = transactionTypeFilter.value;
-    const selectedDate = dateFilter.value;
-    let filteredData = data;
+  drawBarChart(labels, values, colors);
+  drawCircularChart(labels, values, colors);
+}
 
-    if (selectedType) {
-      filteredData = filteredData.filter(tx => tx.transaction_type === selectedType);
+function drawBarChart(labels, values, colors) {
+  const ctx = document.getElementById("barChart").getContext("2d");
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Transaction Types",
+        data: values,
+        backgroundColor: colors
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true } }
     }
+  });
+}
 
-    if (selectedDate) {
-      filteredData = filteredData.filter(tx => tx.date.startsWith(selectedDate));
+function drawCircularChart(labels, values, colors) {
+  const ctx = document.getElementById("circularChart").getContext("2d");
+  if (circularChart) circularChart.destroy();
+
+  circularChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
     }
+  });
+}
 
-    updateTable(filteredData);
-    updateTotals(filteredData);
-    renderBarChart(filteredData);
-    renderPieChart(filteredData);
-  }
+function updateTable(rows) {
+  const tbody = document.getElementById("table");
+  tbody.innerHTML = "";
 
-  function updateTable(data) {
-    transactionsTableBody.innerHTML = "";
-    data.forEach(tx => {
-      transactionsTableBody.innerHTML += `
-        <tr>
-          <td>${tx.date}</td>
-          <td>${tx.sender}</td>
-          <td>${tx.recipient_name}</td>
-          <td>${tx.transaction_type}</td>
-          <td>${tx.amount} RWF</td>
-        </tr>`;
-    });
-  }
+  rows.forEach(d => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${d.date}</td>
+      <td>${d.recipient_name}</td>
+      <td>${d.recipient_phone}</td>
+      <td>${d.transaction_type}</td>
+      <td>${d.amount.toLocaleString()} RWF</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
-  function updateTotals(data) {
-    let totalSent = 0;
-    let totalReceived = 0;
-    let totalUnknown = 0;
+function generateColors(n) {
+  const palette = [
+    "#f39c12", "#27ae60", "#e74c3c", "#3498db", "#9b59b6",
+    "#16a085", "#f1c40f", "#2c3e50", "#d35400", "#7f8c8d"
+  ];
+  return Array.from({ length: n }, (_, i) => palette[i % palette.length]);
+}
 
-    data.forEach(tx => {
-      if (tx.transaction_type === "Bank Deposit" || tx.transaction_type === "Incoming Money") {
-        totalReceived += tx.amount;
-      } else if (tx.transaction_type === "Unknown") {
-        totalUnknown += tx.amount;
-      } else {
-        totalSent += tx.amount;
-      }
-    });
-
-    totalSentBox.textContent = formatCurrency(totalSent);
-    totalReceivedBox.textContent = formatCurrency(totalReceived);
-    totalUnknownBox.textContent = formatCurrency(totalUnknown);
-  }
-
-  function renderBarChart(data) {
-    const ctx = barChartCanvas.getContext("2d");
-    if (window.barChart) window.barChart.destroy();
-
-    const grouped = {};
-    data.forEach(tx => {
-      grouped[tx.transaction_type] = (grouped[tx.transaction_type] || 0) + tx.amount;
-    });
-
-    window.barChart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: Object.keys(grouped),
-        datasets: [{
-          label: "Total Amount (RWF)",
-          data: Object.values(grouped),
-          backgroundColor: "#4CAF50"
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } }
-      }
-    });
-  }
-
-  function renderPieChart(data) {
-    const ctx = pieChartCanvas.getContext("2d");
-    if (window.pieChart) window.pieChart.destroy();
-
-    const grouped = {};
-    data.forEach(tx => {
-      grouped[tx.transaction_type] = (grouped[tx.transaction_type] || 0) + tx.amount;
-    });
-
-    window.pieChart = new Chart(ctx, {
-      type: "pie",
-      data: {
-        labels: Object.keys(grouped),
-        datasets: [{
-          data: Object.values(grouped),
-          backgroundColor: [
-            "#4CAF50", "#FFC107", "#03A9F4", "#FF5722", "#9C27B0", "#795548", "#607D8B"
-          ]
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: "right"
-          }
-        }
-      }
-    });
-  }
-
-  function formatCurrency(amount) {
-    return new Intl.NumberFormat("rw-RW", {
-      style: "currency",
-      currency: "RWF"
-    }).format(amount);
-  }
-});
+load();

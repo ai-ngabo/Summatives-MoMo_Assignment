@@ -1,122 +1,59 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple Dashboard</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-  <header class="head">
-    <h1 class="title">MOMO Tracker</h1>
-    <a id="apiLink" href="https://summatives-momo-assignment.onrender.com/transactions">Connect to API</a>
-  </header>
-
-  <section class="main">
-    <div class="chart-box">
-      <canvas id="barChart"></canvas>
-    </div>
-
-    <div class="filters">
-      <label>
-        Type
-        <select id="type">
-          <option value="all">All</option>
-        </select>
-      </label>
-      <label>
-        Start Date
-        <input type="date" id="start">
-      </label>
-      <label>
-        End Date
-        <input type="date" id="end">
-      </label>
-      <button onclick="apply()">Apply</button>
-    </div>
-  </section>
-
-  <section class="table-box">
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Name</th>
-          <th>Phone</th>
-          <th>Type</th>
-          <th>Amount</th>
-        </tr>
-      </thead>
-      <tbody id="table"></tbody>
-    </table>
-  </section>
-
-  <script src="script.js"></script>
-</body>
-</html> -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Transaction Dashboard</title>
+  <title>MoMo Tracker</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="dashboard">
-    <div class="top-bar">
-      <label for="api-link">API Link:</label>
-      <input type="text" id="api-link" placeholder="https://summatives-momo-assignment.onrender.com/transactions" />
+  <header class="head">
+    <h1 class="title">MoMo Tracker App</h1>
+    <a id="apiLink" href="https://summatives-momo-assignment.onrender.com/transactions" target="_blank">Connect to API</a>
+  </header>
+
+  <div class="main">
+    <div class="left-section">
+      <div class="summary">
+        <div class="box" id="receivedBox">Total Received: 0 RWF</div>
+        <div class="box" id="sentBox">Total Sent: 0 RWF</div>
+      </div>
+      <div class="chart-box">
+        <canvas id="barChart"></canvas>
+        <canvas id="circularChart"></canvas>
+      </div>
     </div>
 
-    <div class="main">
-      <div class="left">
-        <div class="cards">
-          <div class="card" id="total-sent">Total Sent: 0 RWF</div>
-          <div class="card" id="total-received">Total Received: 0 RWF</div>
-          <div class="card" id="total-unknown">Unknown: 0 RWF</div>
-          <div class="card" id="total-filtered">Filtered Total: 0 RWF</div>
-        </div>
-
-        <div class="charts">
-          <div>
-            <canvas id="barChart"></canvas>
-          </div>
-          <div>
-            <canvas id="pieChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <div class="right">
-        <div class="filters">
-          <label for="type-filter">Filter by Type:</label>
-          <select id="type-filter">
+    <div class="right-section">
+      <div class="filters">
+        <label>Type
+          <select id="type">
             <option value="all">All</option>
           </select>
-          <label for="date-filter">Filter by Date:</label>
-          <input type="date" id="date-filter" />
-        </div>
-        <div class="table-box">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody id="transaction-body"></tbody>
-          </table>
-        </div>
+        </label>
+        <label>Start Date <input type="date" id="start" /></label>
+        <label>End Date <input type="date" id="end" /></label>
+        <button onclick="apply()">Apply</button>
+      </div>
+
+      <div class="table-box">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Type</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody id="table"></tbody>
+        </table>
       </div>
     </div>
-
-    <script src="script.js"></script>
   </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
